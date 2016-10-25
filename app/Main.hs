@@ -1,7 +1,8 @@
 module Main where
 
 import NezType
-import Text.ParserCombinators.Parsec
+import NezReader
+
 
 main :: IO ()
 main = test1 >> test2 >> test3 >> test4
