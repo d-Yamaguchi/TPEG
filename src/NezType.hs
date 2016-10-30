@@ -1,6 +1,7 @@
 module NezType where
 
 import Control.Arrow
+import Text.ParserCombinators.Parsec
 
 type Tag = String
 
@@ -22,14 +23,6 @@ data Value = VToken Tag Token -- VToken {ty :: Tag, value :: Token}
            | VTree Tag [LabeledTree] -- | VTree {ty :: Tag, value :: [LabeledTree]}
            deriving (Eq,Show)
 
-getTagOfV :: Value -> Tag
-getTagOfV (VToken t _) = t
-getTagOfV (VTuple t _) = t
-getTagOfV (VChoice t _) = t
-getTagOfV (VOption t _) = t
-getTagOfV (VList t _) = t
-getTagOfV (VTree t _) = t
-
 type TypedSubNode = (String, Ty)
 
 data Ty = TToken Tag Token
@@ -47,3 +40,21 @@ typingFunc (VChoice tag vs) = TChoice tag (fmap typingFunc vs)
 typingFunc (VOption tag v) = TOption tag (typingFunc v)
 typingFunc (VList tag v) = TList tag (typingFunc v)
 typingFunc (VTree tag lts) = TTree tag (fmap (second typingFunc) lts)
+
+-- Parser ----------------------------
+--nezFile = endBy line eol
+
+--line = sepBy (productionRule <|> comment) (char '\n')
+
+--productionRule = do
+--  ruleID <- many (noneOf " ,=\n")
+--  spaces
+--  expr <- nezExpression
+--  return Just $ (ruleID, nezExpression)
+
+--comment = (string "/*" >> manyTill anyChar ((try (string "*/") >> return Nothing <|> eof) >> spaces >> return Nothing
+
+--nezExpression = do
+--  return expression
+
+--eol = char '\n'
