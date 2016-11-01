@@ -42,19 +42,38 @@ typingFunc (VList tag v) = TList tag (typingFunc v)
 typingFunc (VTree tag lts) = TTree tag (fmap (second typingFunc) lts)
 
 -- Parser ----------------------------
---nezFile = endBy line eol
+nezFile = endBy line eol
 
---line = sepBy (productionRule <|> comment) (char '\n')
+line =  try (productionRule)
+    <|> try comment
+    <?> "Lines"
 
---productionRule = do
---  ruleID <- many (noneOf " ,=\n")
---  spaces
---  expr <- nezExpression
---  return Just $ (ruleID, nezExpression)
+comment = (string "/*" >> manyTill anyChar ((try (string "*/") >> return Nothing <|> eof) >> spaces >> return Nothing
 
---comment = (string "/*" >> manyTill anyChar ((try (string "*/") >> return Nothing <|> eof) >> spaces >> return Nothing
+productionRule = do
+  ruleID <- many (noneOf " ,=\n")
+  spaces
+  char '='
+  spaces
+  expr <- nezExpression
+  return Just $ (ruleID, expr)
 
---nezExpression = do
---  return expression
+nezExpression =  try (tagedTree)
+             <|> try (tagedTuple)
+             <|> try (tagedChoice)
+             <?> "nez expression"
 
---eol = char '\n'
+tagedTree =  try (leftFolding)
+         <|> try (normalTree)
+         <?> "taged Tree"
+
+normalTree = do
+  char '{'
+  manyTill anyChar (char '$')
+  labelid <- manyTill anyChar (char '(')
+  char '#'
+  tag <- manyTill anyChar (space <|> char '}')
+  return $ VTree tag [(labelid, )]
+
+eol =   string "\n\n"
+    <?> "end of line"

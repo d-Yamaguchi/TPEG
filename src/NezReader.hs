@@ -1,6 +1,5 @@
 module NezReader where
 
-
 import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Expr
 import Text.ParserCombinators.Parsec.Language
