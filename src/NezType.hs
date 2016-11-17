@@ -40,6 +40,7 @@ nezIdentifier = identifier tokenParser
 nezReservedOp = reservedOp tokenParser
 nezReserved = reserved tokenParser
 nezWhiteSpace = whiteSpace tokenParser
+nezHexdigit = hexDigit tokenParser
 
 stmt :: Parser NEZType
 stmt =  try exampleStatement
@@ -57,7 +58,7 @@ importStatement = do
   nezIdentifier
   return ("import", Tname (concat name))--fixme or remove me
 
-production :: Parser NezType
+production :: Parser NEZType
 production = do
   many (nezReserved "public" <|> nezReserved "inline")
   name <- nezIdentifier
@@ -73,9 +74,23 @@ expression = buildExpressionParser table term <?> "expression"
            , [Suffix (nezReservedOp "?" >> return . typingFunc2Optional)]
            , [Prefix (nezReservedOp "&" >> return)]
            , [Prefix (nezReservedOp "!" >> return)]
-           , [Infix  (nezWhiteSpace >> return) AssocLeft]
-           , [Infix  (nezReservedOp "/" >> return) AssocLeft]
+           , [Infix  (nezWhiteSpace >> return . typingFunc2Tuple) AssocLeft]
+           , [Infix  (nezReservedOp "/" >> return . typingFunc2Union) AssocLeft]
            ]
+    term = try (nezDot >> Ttoken [] ".")
+        <|> try (nezParens expression)
+        <|> try (nezSquare many1 anyChar >>= Tname )
+        <|> try (string "\\0x" >> foldr (:) [] [nezHexdigit, nezHexdigit, nezHexdigit, nezHexdigit] >>= Ttoken [])
+        <|> try (string "\\U+" >> foldr (:) [] [nezHexdigit, nezHexdigit] >>= Ttoken [])
+        <|> try constructor
+        <|> try constructorL
+        <|> try tagging
+        <|> (nezIdentifier >>= Tname )
+
+constructor :: Parser Ty
+constructor =
+
+
 
 typingFunc2List :: Ty -> Ty
 typingFunc2List s = case s of
@@ -105,5 +120,14 @@ typingFunc2Optional s = case s of
   _ -> Toption s
 
 typingFunc2Tuple :: Ty -> Ty -> Ty
-typingFunc2Tuple (Ttuple tag1 tys1) t2 =
-typingFunc2Tuple t1 (Ttuple tag2 tys2) = 
+typingFunc2Tuple (Ttuple tag1 tys1) t2 = Ttuple tag1 (tys1 ++ [t2])
+typingFunc2Tuple t1 (Ttuple tag2 tys2) = Ttuple tag2 (t1 :: tys2)
+typingFunc2Tuple t1 t2 = Ttuple [] [t1,t2]
+
+typingFunc2Union :: Ty -> Ty -> Ty
+typingFunc2Union (Tunion tys) t2 = Tunion tys ++ [t2]
+typingFunc2Union t1 (Tunion tys) = Tunion t1 :: tys
+typingFunc2Union t1 t2 = Tunion t1 t2
+
+typingFunc4Constructor :: Ty -> Ty
+typingFunc4Constructor (Tunion tys) = 

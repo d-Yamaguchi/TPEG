@@ -1,11 +1,12 @@
 module Main where
 
-import NezType
+import NezReader
 
 
 main :: IO ()
-main = test1 >> test2 >> test3 >> test4
+main = print "hello"
 
+{-}
 test1 :: IO()
 test1 = print $ typingFunc (VToken "someTag" (TString "hoge"))
 
@@ -22,3 +23,4 @@ testSum :: IO()
 testSum = print $ typingFunc tSum
   where
     tSum = VTree "someTag" [("label1", VToken "hoge" Any), ("label2", VTuple "fuga" [VToken "hoge" Any])]
+-}
