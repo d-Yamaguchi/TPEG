@@ -130,4 +130,4 @@ typingFunc2Union t1 (Tunion tys) = Tunion t1 :: tys
 typingFunc2Union t1 t2 = Tunion t1 t2
 
 typingFunc4Constructor :: Ty -> Ty
-typingFunc4Constructor (Tunion tys) = 
+typingFunc4Constructor (Tunion tys) =

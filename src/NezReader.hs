@@ -12,10 +12,20 @@ import Text.Parsec.Language
 data NezAST = Source [NezAST]
             | Grammar [NezAST]
             | Production [NezAST]
+            | Choic [NezAST]
+            | Sequence [NezAST]
+            | And NezAST
+            | Not NezAST
+            | Rep NezAST
+            | RepOne NezAST
+            | Option NezAST
+            | Foldtree [NezAST]
+            | Tree [NezAST]
+            | LinkTree [NezAST]
+            | Link [NezAST]
             | Import String
             | Name String
-
---data NezAST' = NezAST {tag:: String, subNode:: NezAST}
+            | Tagging String
 
 {-parser definition-}
 languageDefinition = javaStyle{ reservedOpNames = ["<", ">", "=", "/", "$", "-", "&", "!", "{$"]
@@ -37,6 +47,7 @@ nezIdentifier = identifier tokenParser
 nezReservedOp = reservedOp tokenParser
 nezReserved = reserved tokenParser
 nezWhiteSpace = whiteSpace tokenParser
+nezHexdigit = hexDigit tokenParser
 
 nezName :: Parser NezAST
 nezName = do
@@ -50,7 +61,7 @@ source :: Parser NezAST
 source = stmt >>= (\sub -> return (Source [sub]))
 
 stmt :: Parser NezAST -- removed examplestmt
-stmt = (try grammar <|> try importStmt <|> production)
+stmt = try grammar <|> try importStmt <|> production
 
 grammar :: Parser NezAST
 grammar = do
@@ -73,24 +84,59 @@ production = do
   expr <- expression
   return $ Production [name, expr]
 
-expression = nezName -- stub
-{-expressionparsr
 expression  = buildExpressionParser table term
   where
-    table = [[Suffix (nezReservedOp "*" >> return . typingFunc2List)]
-           , [Suffix (nezReservedOp "+" >> return . typingFunc2ZeroMore)]
-           , [Suffix (nezReservedOp "?" >> return . typingFunc2Optional)]
-           , [Prefix (nezReservedOp "&" >> return)]
-           , [Prefix (nezReservedOp "!" >> return)]
-           , [Infix  (nezWhiteSpace >> return . typingFunc2Tuple) AssocLeft]
-           , [Infix  (nezReservedOp "/" >> return . typingFunc2Union) AssocLeft]
+    table = [[Postfix (nezReservedOp "*" >> (\a -> return Rep a))]
+           , [Postfix (nezReservedOp "+" >> (\a -> return RepOne a))]
+           , [Postfix (nezReservedOp "?" >> (\a -> return Choic a))]
+           , [Prefix (nezReservedOp "&" >> (\a -> return And a))]
+           , [Prefix (nezReservedOp "!" >> (\a -> return Not a))]
+           , [Infix  (nezWhiteSpace >> (\a b -> return Sequence [a, b])) AssocLeft]
+           , [Infix  (nezReservedOp "/" >> (\a b -> return Choic [a, b])) AssocLeft]
            ]
-    term = try (nezDot >> Ttoken [] ".")
+    term = try (nezDot >> return Name ".")
         <|> try (nezParens expression)
-        <|> try (nezSquare many1 anyChar >>= Tname )
-        <|> try (string "\\0x" >> foldr (:) [] [nezHexdigit, nezHexdigit, nezHexdigit, nezHexdigit] >>= Ttoken [])
-        <|> try (string "\\U+" >> foldr (:) [] [nezHexdigit, nezHexdigit] >>= Ttoken [])
+        <|> try (nezSquare many1 anyChar >>= (\a -> return Name a) )
+        <|> try (string "\\0x" >> nezHexdigit >>= (\a -> return Name a))
+        <|> try (string "\\U+" >> nezHexdigit >>= (\a -> return Name a))
         <|> try constructor
         <|> try constructorL
+        <|> try link
         <|> try tagging
-        <|> (nezIdentifier >>= Tname )-}
+        <|> try replace
+        <|> nezName
+
+constructor :: Parser NezAST
+constructor = do
+  expr <- nezBraces expression
+  return $ Tree expr
+
+constructorL :: Parser NezAST
+constructorL = do
+  nezReservedOp "{$"
+  name <- nezName
+  expr <- nezBraces expression
+  return $ Foldtree [name, expr]
+
+link :: Parser NezAST
+link = do
+  nezReservedOp "$"
+  label <- nezName
+  linkInnar <- (nezParens expression)
+  return $ Link [label, linkInnar]
+
+linkTree :: Parser NezAST
+linkTree = do
+  nezReservedOp "$"
+  label <- nezName
+  linkInnar <- (nezBraces expression)
+  return $ LinkTree [label, linkInnar]
+
+tagging :: Parser NezAST
+tagging = do
+  nezReservedOp "#"
+  name <- nezIdentifier
+  return $ Tagging name
+
+replace :: Parser NezAST
+replace = between (symbol "'") (symbol "'") (anyChar) >>=　(\a -> return Name [a])
