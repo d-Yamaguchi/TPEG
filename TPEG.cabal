@@ -1,47 +1,64 @@
-name:                TPEG
-version:             0.1.0.0
-synopsis:            Initial project template from stack
-description:         Please see README.md
-homepage:            https://github.com/d-Yamaguchi/TPEG#readme
-license:             BSD3
-license-file:        LICENSE
-author:              Daisuke
-maintainer:          example@example.com
-copyright:           2016 Daisuke
-category:            ProtoType
-build-type:          Simple
--- extra-source-files:
-cabal-version:       >=1.10
+-- This file has been generated from package.yaml by hpack version 0.20.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 661854bcda21572d8737244c02d7f33febe9859543f2b42541cf308a4f8c0196
 
-library
-  hs-source-dirs:      src
-  exposed-modules:     NezReader
-  build-depends:       base >= 4.7 && < 5
-                     , parsec
-                     , mtl
-  default-language:    Haskell2010
+name:           TPEG
+version:        0.1.0.0
+description:    Please see the README on Github at <https://github.com/d-Yamaguchi/TPEG#readme>
+homepage:       https://github.com/d-Yamaguchi/TPEG#readme
+bug-reports:    https://github.com/d-Yamaguchi/TPEG/issues
+author:         d-Yamaguchi
+maintainer:     d.yamaguchi.bf@gmail.com
+copyright:      2018 d-Yamaguchi
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+cabal-version:  >= 1.10
 
-executable TPEG
-  hs-source-dirs:      app
-  main-is:             Main.hs
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  build-depends:       base
-                     , mtl
-                     , parsec
-                     , TPEG
-  default-language:    Haskell2010
-
-test-suite TPEG-test
-  type:                exitcode-stdio-1.0
-  hs-source-dirs:      test
-  main-is:             Spec.hs
-  build-depends:       base
-                     , parsec
-                     , mtl
-                     , TPEG
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  default-language:    Haskell2010
+extra-source-files:
+    ChangeLog.md
+    README.md
 
 source-repository head
-  type:     git
-  location: https://github.com/d-Yamaguchi/TPEG.git
+  type: git
+  location: https://github.com/d-Yamaguchi/TPEG
+
+library
+  hs-source-dirs:
+      src
+  build-depends:
+      base >=4.7 && <5
+    , mtl
+  exposed-modules:
+      Lib
+    , TypedNez
+  other-modules:
+      Paths_TPEG
+  default-language: Haskell2010
+
+executable TPEG-exe
+  main-is: Main.hs
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      TPEG
+    , base >=4.7 && <5
+  other-modules:
+      Paths_TPEG
+  default-language: Haskell2010
+
+test-suite TPEG-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      TPEG
+    , base >=4.7 && <5
+  other-modules:
+      Paths_TPEG
+  default-language: Haskell2010
