@@ -1,13 +1,24 @@
 module Nezcc2 (
-    result
+    runTestParsers
 )
 where
 
-ex :: ParserContext
-ex = Succ {inputs = "aaa", pos = 0, tree = Empty}
 
-result = char1 'a' ex
+-- comment
+-- (ParserContext -> ParserContext)の関数の部分適用&合成がやりづらいので関数の返り値は(ParserContext -> ParserContext)に統一して欲しい．
 
+
+----for Debuging----
+data ParseResult = Result {initalParserContext :: ParserContext, result :: ParserContext} deriving (Show)
+
+ex0 :: ParserContext
+ex0 = Succ {inputs = "aaa", pos = 0, tree = Empty}
+
+
+runTestParsers = [ Result {initalParserContext = ex0, result = char1 'a' ex0}
+                 , Result {initalParserContext = ex0, result = (char1 'a' . (char1 'a')) ex0}
+                 ]
+--------------------
 
 data AST =  Empty
          | Label {tag :: String, child :: AST, prev :: AST}
